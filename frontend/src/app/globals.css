@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-void: #02040a;
+  --cyan-neon: #00F2FE;
+  --cobalt-neon: #2563EB;
+  --amber-alert: #F59E0B;
+  --emerald-beacon: #10B981;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: #E2E8F0;
+  overflow: hidden;
+  user-select: none;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Faint Cyber Grid Overlay */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 242, 254, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 242, 254, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Subtle CRT Scanlines */
+.hud-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 242, 254, 0.015) 3px,
+    rgba(0, 0, 0, 0.2) 4px
+  );
+  pointer-events: none;
+}
+
+/* Chamfered Cut-Corner Geometry */
+.clip-chamfer {
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 10px) 0, 
+    100% 10px, 
+    100% 100%, 
+    10px 100%, 
+    0 calc(100% - 10px)
+  );
+}
+
+.clip-chamfer-lg {
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 16px) 0, 
+    100% 16px, 
+    100% 100%, 
+    16px 100%, 
+    0 calc(100% - 16px)
+  );
+}
+
+.clip-chamfer-sm {
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 6px) 0, 
+    100% 6px, 
+    100% 100%, 
+    6px 100%, 
+    0 calc(100% - 6px)
+  );
+}
+
+/* Laser Sweep Shimmer Effect on Hover */
+.laser-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.laser-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+  transform: skewX(-25deg);
+  transition: none;
+  pointer-events: none;
+}
+
+.laser-shimmer:hover::before {
+  left: 200%;
+  transition: left 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom HUD Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(2, 4, 10, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 254, 0.25);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 254, 0.6);
+}

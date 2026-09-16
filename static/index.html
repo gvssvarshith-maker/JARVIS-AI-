@@ -1,0 +1,402 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>J.A.R.V.I.S. // TACTICAL HOLOGRAPHIC AI HUD</title>
+  
+  <!-- Sci-Fi Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="fui-hud-theme">
+
+  <!-- Holographic Grid Background & Scanlines -->
+  <div class="hud-background-grid" aria-hidden="true"></div>
+  <div class="hud-scanlines" aria-hidden="true"></div>
+  <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
+
+  <div class="hud-viewport">
+    
+    <!-- TOP TACTICAL COCKPIT BAR -->
+    <header class="tactical-topbar">
+      <!-- Left: Stark Identity & System Specs -->
+      <div class="topbar-section topbar-left">
+        <div class="stark-crest">
+          <div class="crest-bracket left-bracket"></div>
+          <div class="crest-core">
+            <span class="crest-code">MK-85</span>
+          </div>
+          <div class="crest-bracket right-bracket"></div>
+        </div>
+        <div class="system-id-block">
+          <div class="sys-title">
+            <span class="neon-jarvis">J.A.R.V.I.S.</span>
+            <span class="hud-version">v2.1.0-STARK_CORP</span>
+          </div>
+          <div class="sys-telemetry-row">
+            <span class="beacon-led beacon-green" title="Neural Sync Active"></span>
+            <span class="telemetry-tag">NEURAL LINK: <strong class="text-cyan">GEMINI 3.6 FLASH</strong></span>
+            <span class="telemetry-separator">|</span>
+            <span class="telemetry-tag">LATENCY: <strong class="text-cyan" id="pingValue">24ms</strong></span>
+            <span class="telemetry-separator">|</span>
+            <span class="telemetry-tag">FRAME: <strong class="text-cyan" id="fpsValue">60 FPS</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Holographic Waveform Visualizer -->
+      <div class="topbar-section topbar-center">
+        <div class="hud-reticle">
+          <span class="reticle-label">SPECTRAL FREQUENCY</span>
+          <div class="waveform-spectrum" id="audioSpectrum">
+            <!-- 24 dynamic frequency visualizer bars -->
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: System Controls & Biometrics -->
+      <div class="topbar-section topbar-right">
+        <div class="clock-display" id="hudClock">00:00:00 UTC</div>
+        
+        <div class="status-indicator-badge" id="hudStatusBadge">
+          <span class="beacon-led beacon-pulse-cyan" id="coreBeacon"></span>
+          <span class="status-text" id="hudStatusText">ONLINE</span>
+        </div>
+
+        <button class="hud-chamfer-btn btn-sm" id="voiceToggleBtn" title="Toggle Vocal Synthesis">
+          <span class="beacon-led beacon-green" id="voiceBeacon"></span>
+          <span id="voiceBtnText">VOCAL: ON</span>
+        </button>
+
+        <button class="hud-chamfer-btn btn-sm btn-amber" id="clearChatBtn" title="Flush Memory Core">
+          <span class="beacon-led beacon-amber"></span>
+          <span>FLUSH CORE</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN HOLOGRAPHIC HUD GRID -->
+    <main class="hud-main-workspace">
+
+      <!-- LEFT PERIPHERAL TELEMETRY DECK -->
+      <aside class="hud-panel left-deck">
+        
+        <!-- Arc Reactor 3D Gyroscope -->
+        <div class="deck-card chamfered-card">
+          <div class="card-header">
+            <span class="corner-cross top-left">+</span>
+            <span class="corner-cross top-right">+</span>
+            <span class="card-title">ARC CORE TELEMETRY</span>
+            <span class="badge-amber">ACTIVE</span>
+          </div>
+          <div class="gyroscope-wrapper">
+            <canvas id="gyroCanvas" width="220" height="220"></canvas>
+            <div class="core-metrics-overlay">
+              <div class="metric-line">TEMP: <span class="text-cyan">342.6°K</span></div>
+              <div class="metric-line">OUTPUT: <span class="text-cyan">100.0%</span></div>
+              <div class="metric-line">FLUX: <span class="text-green">STABLE</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Sub-System Protocol Toggles -->
+        <div class="deck-card chamfered-card">
+          <div class="card-header">
+            <span class="card-title">SYSTEM PROTOCOLS</span>
+            <span class="card-code">SEC-LVL 10</span>
+          </div>
+          <div class="protocol-toggle-list">
+            <div class="protocol-row">
+              <span class="proto-label">AUTO_RECON</span>
+              <label class="hud-switch">
+                <input type="checkbox" checked id="toggleAutoRecon">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="protocol-row">
+              <span class="proto-label">DEEP_STREAM</span>
+              <label class="hud-switch">
+                <input type="checkbox" checked id="toggleDeepStream">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="protocol-row">
+              <span class="proto-label">QUANTUM_MEM</span>
+              <label class="hud-switch">
+                <input type="checkbox" checked id="toggleQuantumMem">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="protocol-row">
+              <span class="proto-label">SYS_OVERCLOCK</span>
+              <label class="hud-switch">
+                <input type="checkbox" id="toggleOverclock">
+                <span class="slider amber-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monospace Hex Code Live Stream -->
+        <div class="deck-card chamfered-card hex-stream-card">
+          <div class="card-header">
+            <span class="card-title">BUFFER STREAM</span>
+            <span class="text-muted" id="hexAddress">0x7FFE_A400</span>
+          </div>
+          <div class="hex-stream-body" id="hexStreamBody">
+            <code>0x00A1  4A 41 52 56 49 53 20 4F 4E 4C 49 4E 45</code>
+            <code>0x00B2  2E 2E 2E 20 53 59 4E 43 20 4F 4B 21 00</code>
+            <code>0x00C4  47 45 4D 49 4E 49 5F 33 2E 36 5F 46 4C</code>
+            <code>0x00D8  54 4F 4E 59 5F 53 54 41 52 4B 5F 41 55</code>
+            <code>0x00EC  46 55 4C 4C 5F 44 55 50 4C 45 58 5F 54</code>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- CENTER COMMAND COCKPIT (THE AI CHATBOT EXPERIENCE) -->
+      <section class="hud-panel center-cockpit">
+        
+        <!-- Rotating Arc Reactor Hologram Header -->
+        <div class="hologram-reactor-banner" id="reactorBanner">
+          <div class="reactor-holocore" id="holoReactorCore">
+            <div class="holo-ring holo-r1"></div>
+            <div class="holo-ring holo-r2"></div>
+            <div class="holo-ring holo-r3"></div>
+            <div class="holo-ring holo-r4"></div>
+            <div class="holo-energy-dot"></div>
+          </div>
+          <div class="reactor-hud-meta">
+            <h2 class="holo-heading">J.A.R.V.I.S. HOLOGRAPHIC INTERFACE</h2>
+            <p class="holo-subheading">AWAITING VOCAL OR TACTICAL INSTRUCTION &bull; CLEARANCE: TONY STARK</p>
+          </div>
+        </div>
+
+        <!-- Eye-Catching Chamfered Protocol Action Cards -->
+        <div class="tactical-cards-row">
+          <button class="tactical-card chamfered-card" data-prompt="Initiate a full tactical diagnostic of all JARVIS subsystems and telemetry.">
+            <div class="t-badge"><span class="beacon-led beacon-cyan"></span> PROTOCOL 01</div>
+            <div class="t-title">SYSTEM DIAGNOSTIC</div>
+            <div class="t-desc">Full integrity scan of memory & neural networks</div>
+            <div class="t-glow-edge"></div>
+          </button>
+
+          <button class="tactical-card chamfered-card" data-prompt="What is the current meteorological telemetry for Tokyo, London, and New York?">
+            <div class="t-badge"><span class="beacon-led beacon-green"></span> PROTOCOL 02</div>
+            <div class="t-title">WEATHER SATELLITE</div>
+            <div class="t-desc">Atmospheric conditions & real-time radar</div>
+            <div class="t-glow-edge"></div>
+          </button>
+
+          <button class="tactical-card chamfered-card" data-prompt="Calculate the velocity required to escape Earth's gravity in km/h and break down the formula.">
+            <div class="t-badge"><span class="beacon-led beacon-cyan"></span> PROTOCOL 03</div>
+            <div class="t-title">QUANTUM COMPUTE</div>
+            <div class="t-desc">Orbital mechanics & mathematical matrix</div>
+            <div class="t-glow-edge"></div>
+          </button>
+
+          <button class="tactical-card chamfered-card btn-amber" data-prompt="Search and analyze the latest global breakthroughs in artificial general intelligence and quantum microprocessors.">
+            <div class="t-badge"><span class="beacon-led beacon-amber"></span> PROTOCOL 04</div>
+            <div class="t-title">NEURAL RECON</div>
+            <div class="t-desc">DuckDuckGo global deep web analysis</div>
+            <div class="t-glow-edge"></div>
+          </button>
+        </div>
+
+        <!-- Central Holographic Chat Feed -->
+        <div class="holographic-chat-feed" id="chatFeed">
+          <!-- Messages dynamically appended here -->
+        </div>
+
+        <!-- Floating Tactical Typing Indicator -->
+        <div class="tactical-typing-bar hidden" id="typingIndicator">
+          <div class="radar-sweep-indicator"></div>
+          <span class="typing-label">J.A.R.V.I.S. IS SYNTHESIZING RESPONSE...</span>
+          <div class="cyber-loading-dots">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <!-- Tactical Command Input Deck -->
+        <div class="tactical-input-deck chamfered-card">
+          <span class="corner-cross top-left">+</span>
+          <span class="corner-cross top-right">+</span>
+          <span class="corner-cross bottom-left">+</span>
+          <span class="corner-cross bottom-right">+</span>
+
+          <div class="input-glow-frame">
+            <!-- Biometric / Mic Voice Trigger -->
+            <button class="hud-mic-trigger chamfered-btn" id="micBtn" title="Engage Voice Protocol (Speech-to-Text)">
+              <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <div class="mic-ripple" aria-hidden="true"></div>
+            </button>
+
+            <!-- Textarea -->
+            <textarea
+              id="userInput"
+              class="hud-textarea"
+              placeholder="ENTER TACTICAL COMMAND OR QUERY... (ENTER TO EXECUTE)"
+              rows="1"
+            ></textarea>
+
+            <!-- Send Command Button with Angular Chamfer & Neon Bloom -->
+            <button class="hud-execute-btn chamfered-btn" id="sendBtn" title="Transmit to JARVIS Core" disabled>
+              <span class="btn-scanline"></span>
+              <span class="btn-glow-backlit"></span>
+              <span class="btn-text">ENGAGE</span>
+              <svg class="hud-svg execute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT PERIPHERAL TELEMETRY & BIOMETRIC DECK -->
+      <aside class="hud-panel right-deck">
+
+        <!-- Biometric Fingerprint Scanner Pad -->
+        <div class="deck-card chamfered-card biometric-card">
+          <div class="card-header">
+            <span class="card-title">BIOMETRIC AUTHORIZATION</span>
+            <span class="badge-green" id="bioStatusBadge">STARK VERIFIED</span>
+          </div>
+          <div class="biometric-pad" id="biometricPad" title="Press to re-scan biometric authorization">
+            <div class="laser-scanner" id="laserScanner"></div>
+            <svg class="fingerprint-svg" viewBox="0 0 100 100">
+              <path d="M50,15 A35,35 0 0,0 15,50 A35,35 0 0,0 25,75" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,22 A28,28 0 0,0 22,50 A28,28 0 0,0 30,70" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,30 A20,20 0 0,0 30,50 A20,20 0 0,0 36,65" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,38 A12,12 0 0,0 38,50 A12,12 0 0,0 42,60" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,22 A28,28 0 0,1 78,50 A28,28 0 0,1 70,70" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,30 A20,20 0 0,1 70,50 A20,20 0 0,1 64,65" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M50,38 A12,12 0 0,1 62,50 A12,12 0 0,1 58,60" stroke="#00F0FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div class="bio-prompt" id="bioPrompt">CLEARANCE: LEVEL 10</div>
+          </div>
+        </div>
+
+        <!-- Circular CPU & Neural Load Rings -->
+        <div class="deck-card chamfered-card">
+          <div class="card-header">
+            <span class="card-title">TACTICAL SYSTEM LOADS</span>
+            <span class="text-cyan">3.4 GHz</span>
+          </div>
+          <div class="gauges-grid">
+            <div class="gauge-item">
+              <svg class="circular-ring" viewBox="0 0 36 36">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill ring-cyan" stroke-dasharray="28, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="gauge-meta">
+                <span class="gauge-num">28%</span>
+                <span class="gauge-label">CPU LOAD</span>
+              </div>
+            </div>
+
+            <div class="gauge-item">
+              <svg class="circular-ring" viewBox="0 0 36 36">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill ring-blue" stroke-dasharray="42, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="gauge-meta">
+                <span class="gauge-num">42%</span>
+                <span class="gauge-label">RAM USAGE</span>
+              </div>
+            </div>
+
+            <div class="gauge-item">
+              <svg class="circular-ring" viewBox="0 0 36 36">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill ring-violet" stroke-dasharray="99, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="gauge-meta">
+                <span class="gauge-num">99.8%</span>
+                <span class="gauge-label">NEURAL NET</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tactical Sub-Routine Queue -->
+        <div class="deck-card chamfered-card">
+          <div class="card-header">
+            <span class="card-title">SUB-ROUTINE QUEUE</span>
+            <span class="text-green">ENGAGED</span>
+          </div>
+          <div class="task-queue-list">
+            <div class="queue-item">
+              <span class="queue-dot green-dot"></span>
+              <div class="queue-text">
+                <div class="queue-title">THREAD_01: MEMORY REPOSITORY</div>
+                <div class="queue-status">SQLite Sync &bull; Persistent</div>
+              </div>
+            </div>
+
+            <div class="queue-item">
+              <span class="queue-dot cyan-dot"></span>
+              <div class="queue-text">
+                <div class="queue-title">THREAD_02: GEMINI NEURAL BRIDGE</div>
+                <div class="queue-status">v1beta API &bull; Streaming Active</div>
+              </div>
+            </div>
+
+            <div class="queue-item">
+              <span class="queue-dot amber-dot"></span>
+              <div class="queue-text">
+                <div class="queue-title">THREAD_03: TELEMETRY RADAR</div>
+                <div class="queue-status">Open-Meteo & DDGS Interlinked</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rapid Protocol Override Actions -->
+        <div class="deck-card chamfered-card">
+          <div class="card-header">
+            <span class="card-title">EMERGENCY PROTOCOLS</span>
+          </div>
+          <div class="protocol-action-grid">
+            <button class="hud-chamfer-btn btn-sm btn-amber" id="protocolOverrideBtn">
+              <span class="beacon-led beacon-amber"></span>
+              <span>SYS_OVERRIDE</span>
+            </button>
+            <button class="hud-chamfer-btn btn-sm" id="protocolLockdownBtn">
+              <span class="beacon-led beacon-cyan"></span>
+              <span>LOCKDOWN</span>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- Floating Connection Notification Toast -->
+    <div class="hud-toast-banner hidden" id="connectionToast">
+      <div class="toast-bracket"></div>
+      <span class="beacon-led beacon-amber"></span>
+      <span id="toastMessage">TRANSMISSION ESTABLISHED</span>
+    </div>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
